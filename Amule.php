@@ -35,6 +35,7 @@ function Presentation(){
 	if(strtoupper($Answer) == "Y"){
 		BuildDirectory();
 		Pkg_Installer();
+		Conf_Amule();
 	}
 	else
 		Color_Output($CCyan,"Script termited by user");
@@ -66,12 +67,40 @@ function Pkg_Installer(){
 		"python37","readline","shared-mime-info","tiff","tpm-emulator","trousers","wayland","webp","wx28-gtk2",
 		"wx28-gtk2-common","xorg-fonts-truetype","xorgproto","zstd","amule");	
 	$cnt = 1;
-	Color_Output($CCyan
+	Color_Output($CCyan,"Installing packages: this may takes few minutes...");
 	foreach($pkg_list as $Pkg){
 		Color_Output($CCyan,"Installing ".$Pkg."(".$cnt."/".count($pkg_list).")...");
 		exec("pkg install -y $Pkg");
 		$cnt = $cnt + 1;
 	}
+	Color_Output($CCyan,"Packages installation complete");
+}
+function Conf_Amule(){
+	global $CCyan;
+	global $CGreen;
+	Color_Output($CCyan,"Starting post install configuration...");
+	if(file_exists("/etc/rc.d/amuled") == false)
+		exec("ln /usr/local/etc/rc.d/amuled /etc/rc.d/amuled");
+	else
+		Color_Output($CGreen,"Amuled alreay linked");
+	$RC_Conf = parse_ini_file("/etc/rc.conf");
+	if(is_array($RC_Conf)){
+		if(array_key_exists("amuled_enable",$RC_Conf) == false){
+			exec('echo amuled_enable=\"YES\" >> /etc/rc.conf');
+		}
+		else
+			Color_Output("$CGreen","Amuled already enabled in /etc/rc.conf...");
+	}
+	else
+		Color_Output("$CGreen","Invalid /etc/rc.conf");	
+	Color_Output($CCyan,"...done");
+}
+function Check_Group_User(){
+	global $CCyan;
+	global $CGreen;
+	Color_Output($CCyan,"Checking user and group...");
+	
+	Color_Output($CCyan,"...done");
 }
 //--------------------------------------------------------------------------
 function Color_Output($color,string $Output){
