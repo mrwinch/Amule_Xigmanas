@@ -22,18 +22,28 @@ $CReset = "\033[m";
 Presentation();
 //--------------------------------------------------------------------------
 function Presentation(){
-  Color_Output($CYellow,"###################################");
-  Color_Output($CCyan,"This script will install Amule");
-  Color_Output($CYellow,"###################################");
-  Color_Output($CRed,"This script may change Xigmanas configuration!!!");
-  Color_Output($CRed,"Please, close Xigmanas WebGUI before continue");
-  echo($CWhite."Are you ready to start [y/n]?$CReset");
-  $Answer = InputKeyboard();
-  if(strtoupper($Answer) == "Y"){
-    
-  }
-  else
-    Color_Output($CCyan,"Script termited by user");
+	  Color_Output($CYellow,"###################################");
+	  Color_Output($CCyan,"This script will install Amule");
+	  Color_Output($CYellow,"###################################");
+	  Color_Output($CRed,"This script may change Xigmanas configuration!!!\nPlease, close Xigmanas WebGUI before continue");
+	  echo($CWhite."Are you ready to start [y/n]?$CReset");
+	  $Answer = InputKeyboard();
+	  if(strtoupper($Answer) == "Y"){
+		  BuildDirectory();
+	  }
+	  else
+		Color_Output($CCyan,"Script termited by user");
+}
+function BuildDirectory(){
+	exec("cd /");
+	Color_Output($CCyan,"Creating aMule directory...");
+	if(file_exists("/home")==false)
+		mkdir("home");
+	if(file_exists("/home/aMule")==false)	
+		mkdir("/home/aMule");
+	if(file_exists("/home/aMule/.aMule")==false)	
+		mkdir("/home/aMule/.aMule");	
+	Color_Output($CCyan,"...done");
 }
 //--------------------------------------------------------------------------
 function Color_Output($color,string $Output){
