@@ -19,6 +19,8 @@ $BCyan = "\033[46m";
 $BWhite = "\033[47m";
 //Reset of colors...
 $CReset = "\033[m";
+$Amule_Group_ID = 802;
+
 Presentation();
 //--------------------------------------------------------------------------
 function Presentation(){
@@ -54,6 +56,7 @@ function BuildDirectory(){
 }
 function Pkg_Installer(){
 	global $CCyan;	
+	global $CGreen;
 	$pkg_list = array ("atk","avahi-app","bash","bash-completion","ca_root_nss","cairo","cryptopp","cups","dbus",
 		"dbus-glib","dejavu","desktop-file-utils","encodings","expat","font-bh-ttf","font-misc-ethiopic",
 		"font-misc-meltho","fontconfig","freetype2","fribidi","gdbm","gdk-pixbuf2","gettext-runtime",
@@ -67,13 +70,20 @@ function Pkg_Installer(){
 		"python37","readline","shared-mime-info","tiff","tpm-emulator","trousers","wayland","webp","wx28-gtk2",
 		"wx28-gtk2-common","xorg-fonts-truetype","xorgproto","zstd","amule");	
 	$cnt = 1;
-	Color_Output($CCyan,"Installing packages: this may takes few minutes...");
-	foreach($pkg_list as $Pkg){
-		Color_Output($CCyan,"Installing ".$Pkg."(".$cnt."/".count($pkg_list).")...");
-		exec("pkg install -y $Pkg");
-		$cnt = $cnt + 1;
+	$Res = exec("pkg info amule");
+	if(strpos($Res,"amule")>-1){
+		Color_Output($CCyan,"Amule package already installed");
 	}
-	Color_Output($CCyan,"Packages installation complete");
+	else
+	{
+		Color_Output($CCyan,"Installing packages: this may takes few minutes...");
+		foreach($pkg_list as $Pkg){
+			Color_Output($CCyan,"Installing ".$Pkg."(".$cnt."/".count($pkg_list).")...");
+			exec("pkg install -y $Pkg");
+			$cnt = $cnt + 1;
+		}
+		Color_Output($CCyan,"Packages installation complete");
+	}
 }
 function Conf_Amule(){
 	global $CCyan;
@@ -98,8 +108,42 @@ function Conf_Amule(){
 function Check_Group_User(){
 	global $CCyan;
 	global $CGreen;
+	global $CRed;
+	global $Amule_Group_ID;
+	$group_file = "/etc/group";
+	$user_file = "/etc/passwd";
+	$Config_File = "/cf/conf/config.xml";	
 	Color_Output($CCyan,"Checking user and group...");
-	
+	//Checking for group existance...
+	if(file_exists($group_file) <> false){
+		$group = file_get_contents($group_file,true);
+		if(is_string($group)){
+			if(strpos($group,"aMule") == false){
+				exec("pw groupadd aMule -u".strval($Amule_Group_ID));				
+			}
+			else
+				Color_Output($CGreen,"Amule group already exist: now checking for user...\n");
+		}
+		else
+			Color_Output($CRed,"Bad content in ".$group_file);
+	}
+	else
+		Color_Output($CRed,"Unable to find ".$group_file);
+	//Checking if user exist...
+	if(file_exists($user_file) <> false){
+		$group = file_get_contents($user_file,true);
+		if(is_string($group)){
+			if(strpos($group,"aMule") == false){
+				exec("pw useradd aMule -g aMule -s /bin/sh -c \"aMule Daemon\" -d /home/aMule");				
+			}
+			else
+				Color_Output($CGreen,"Amule user already exist...");
+		}
+		else
+			Color_Output($CRed,"Bad content in ".$user_file);
+	}
+	else
+		Color_Output($CRed,"Unable to find ".$user_file);	
 	Color_Output($CCyan,"...done");
 }
 //--------------------------------------------------------------------------
