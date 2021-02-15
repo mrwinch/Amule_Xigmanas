@@ -187,7 +187,7 @@ function Start_Conf(){
 			$RC_Conf["WebServer"]["Password"] = $md_pass;
 			$RC_Conf["eMule"]["TempDir"] = $incdir;
 			$RC_Conf["eMule"]["IncomingDir"] = $downdir;
-			write_php_ini($RC_Conf,"/mnt/backup_amule.conf");
+			write_php_ini($RC_Conf,$ConfFile);
 			
 		}
 		else
