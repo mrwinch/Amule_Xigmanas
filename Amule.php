@@ -179,13 +179,14 @@ function Start_Conf(){
 			$incdir = InputKeyboard("Set directory for incomplete file: ");
 		}
 		//echo("Pass -> ".$pass."-".md5($pass)."..\n");
-		$RC_Conf = parse_ini_file($ConfFile, false);
+		$RC_Conf = parse_ini_file($ConfFile, true,INI_SCANNER_RAW);
 		if(is_array($RC_Conf)){
-			/*$RC_Conf["ExternalConnect"]["AcceptExternalConnections"] = 1;
+			$RC_Conf["ExternalConnect"]["AcceptExternalConnections"] = 1;
 			$RC_Conf["ExternalConnect"]["ECPassword"] = $md_pass;
 			$RC_Conf["WebServer"]["Enabled"] = 1;
-			$RC_Conf["WebServer"]["ECPassword"] = $md_pass;*/
-			print_r($RC_Conf);
+			$RC_Conf["WebServer"]["Password"] = $md_pass;
+			$RC_Conf["eMule"]["TempDir"] = $incdir;
+			$RC_Conf["eMule"]["IncomingDir"] = $downdir;
 			write_php_ini($RC_Conf,"/mnt/backup_amule.conf");
 			
 		}
@@ -307,7 +308,7 @@ function write_php_ini($array, $file)
 			$res[] = "[$key]";
 			foreach($val as $skey => $sval) {
 				//$res[] = "$skey=".(is_numeric($sval) ? $sval : '"'.$sval.'"');
-				$res[] = "$key=".$val;
+				$res[] = "$skey=".$sval;
 			}
 		}  
 		else{ 
