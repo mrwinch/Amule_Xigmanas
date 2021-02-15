@@ -20,7 +20,7 @@ $BWhite = "\033[47m";
 //Reset of colors...
 $CReset = "\033[m";
 $Amule_Group_ID = 802;
-
+$config_file = "/cf/conf/config.xml";
 Presentation();
 //--------------------------------------------------------------------------
 function Presentation(){
@@ -38,6 +38,8 @@ function Presentation(){
 		BuildDirectory();
 		Pkg_Installer();
 		Conf_Amule();
+		Check_Group_User();
+		Start_Conf();
 	}
 	else
 		Color_Output($CCyan,"Script termited by user");
@@ -93,7 +95,7 @@ function Conf_Amule(){
 		exec("ln /usr/local/etc/rc.d/amuled /etc/rc.d/amuled");
 	else
 		Color_Output($CGreen,"Amuled alreay linked");
-	$RC_Conf = parse_ini_file("/etc/rc.conf");
+	$RC_Conf = parse_ini_file("/etc/rc.conf",true);
 	if(is_array($RC_Conf)){
 		if(array_key_exists("amuled_enable",$RC_Conf) == false){
 			exec('echo amuled_enable=\"YES\" >> /etc/rc.conf');
@@ -110,6 +112,7 @@ function Check_Group_User(){
 	global $CGreen;
 	global $CRed;
 	global $Amule_Group_ID;
+	global $config_file;
 	$group_file = "/etc/group";
 	$user_file = "/etc/passwd";
 	$Config_File = "/cf/conf/config.xml";	
@@ -144,7 +147,54 @@ function Check_Group_User(){
 	}
 	else
 		Color_Output($CRed,"Unable to find ".$user_file);	
+	if(file_exists($config_file)){
+		Color_Output($CCyan,"Found config.xml: check for user and group...");
+		CheckAmuleGroup();
+	}
+	exec("chown -R aMule:wheel /home/aMule");
+	exec("chmod -R 0777 /home/aMule/.aMule");
 	Color_Output($CCyan,"...done");
+}
+function Start_Conf(){
+	global $CCyan;
+	global $CGreen;
+	global $CRed;
+	$ConfFile = "/home/aMule/.aMule/amule.conf";
+	Color_Output($CCyan,"Creating and editing amule.conf...");
+	if(file_exists($ConfFile) == false){
+		$AmuleConf = fopen($ConfFile, "w");
+		fclose($AmuleConf);	
+		chmod($ConfFile,octdec("666"));		
+	}
+	exec("/etc/rc.d/amuled onestart");
+	sleep(1);
+	exec("/etc/rc.d/amuled stop");
+	$Size = filesize($ConfFile);
+	if(($Size <> false) and ($Size > 0)){
+		$pass = InputKeyboard("Insert amule password:");
+		$md_pass = md5($pass);
+		$dir = InputKeyboard("Would you change download directories [y/n]?");
+		if(strtoupper($dir) == "Y"){
+			$downdir = InputKeyboard("Set directory for complete file: ");
+			$incdir = InputKeyboard("Set directory for incomplete file: ");
+		}
+		//echo("Pass -> ".$pass."-".md5($pass)."..\n");
+		$RC_Conf = parse_ini_file($ConfFile, false);
+		if(is_array($RC_Conf)){
+			/*$RC_Conf["ExternalConnect"]["AcceptExternalConnections"] = 1;
+			$RC_Conf["ExternalConnect"]["ECPassword"] = $md_pass;
+			$RC_Conf["WebServer"]["Enabled"] = 1;
+			$RC_Conf["WebServer"]["ECPassword"] = $md_pass;*/
+			print_r($RC_Conf);
+			write_php_ini($RC_Conf,"/mnt/backup_amule.conf");
+			
+		}
+		else
+			Color_Output($CRed,"Invalid ".$ConfFile);
+	}
+	else
+		Color_Output($CRed,"Invalid amule.conf file (size 0 byte)");			
+	Color_Output($CCyan,"...creation and modification complete");
 }
 //--------------------------------------------------------------------------
 function Color_Output($color,string $Output){
@@ -155,5 +205,135 @@ function InputKeyboard($prompt=null){
 		echo($prompt);
 	fscanf(STDIN,"%s",$pass);
 	return $pass;
+}
+function CheckAmuleGroup(){
+	//$Amule_Group_ID = 803;
+	global $config_file;
+	global $Amule_Group_ID;
+	global $CCyan;
+	global $CGreen;	
+	$config = new DOMDocument("1.0");
+	$config->preserveWhiteSpace = false;
+	$config->formatOutput = true;				
+	$config->load($config_file);
+	$main = $config->documentElement;
+	//['system']['usermanagement']['group']
+	$GroupExist = false;
+	$UserExist = false;
+	foreach($main->childNodes as $item){
+		$name = $item->nodeName;
+		if(strrpos($name,"#text") === false){//node has a valid name...
+			if($name == "system"){	//system node...
+				foreach($item->childNodes as $subitem){
+					$subname = $subitem->nodeName;
+					if(strrpos($subname,"#text") === false){	//node has a valid name
+						if($subname == "usermanagement"){
+							foreach($subitem->childNodes as $childitem){
+								$childname = $childitem->nodeName;
+								if(strrpos($childname,"#text") === false){
+									if($childname == "group"){	//ok: now we are in group leaf
+										foreach($childitem->childNodes as $groupitem){
+											$groupname = $groupitem->nodeName;
+											if(strrpos($groupname,"#text") === false){
+												if($groupname == "name"){
+													//echo("Gruppo:".$groupitem->textContent."\n");
+													if($groupitem->textContent == "aMule")
+														$GroupExist = true;
+												}
+											}
+										}
+									}
+									if($childname == "user"){	//ok: now we are in user leaf
+										foreach($childitem->childNodes as $groupitem){
+											$groupname = $groupitem->nodeName;
+											if(strrpos($groupname,"#text") === false){
+												if($groupname == "name"){
+													//echo("Utente:".$groupitem->textContent."\n");
+													if($groupitem->textContent == "aMule")
+														$UserExist = true;													
+												}
+											}
+										}
+									}
+									
+								}
+							}
+							//Now we can add user...
+							if($GroupExist == false){
+								Color_Output($CGreen,"Amule group doesn't exist in config.xml...");
+								//echo("Amule group doesn't exist...\n");
+								$g = $config->createElement("group","");
+								$g1 = $config->createElement("uuid","a504481c-cf3c-43a7-97a4-74352fbb406a");
+								$g2 = $config->createElement("id",$Amule_Group_ID);
+								$g3 = $config->createElement("name","aMule");
+								$g->appendchild($g1);
+								$g->appendchild($g2);
+								$g->appendchild($g3);
+								$subitem->appendchild($g);
+								$config->save($config_file);
+							}
+							if($UserExist == false){
+								//echo("Amule user doesn't exist...\n");
+								Color_Output($CGreen,"Amule user doesn't exist in config.xml...");
+								$g = $config->createElement("user","");
+								$g1 = $config->createElement("uuid","1ecbc68e-fede-66b3-074f-9afddcd34aef");
+								$g2 = $config->createElement("id",$Amule_Group_ID);
+								$g3 = $config->createElement("name","aMule");
+								$g4 = $config->createElement("primarygroup",$Amule_Group_ID);
+								$g5 = $config->createElement("extraoptions","-c \"aMule Daemon\" -d /home/aMule -s /bin/sh");
+								$g->appendchild($g1);
+								$g->appendchild($g3);
+								$g->appendchild($g2);
+								$g->appendchild($g4);
+								$g->appendchild($g5);
+								$subitem->appendchild($g);		
+								$config->save($config_file);								
+							}
+							
+						}
+					}
+				}
+			}
+		}
+	}
+}
+function write_php_ini($array, $file)
+{
+	$res = array();
+	foreach($array as $key => $val)
+	{
+		if(is_array($val))
+		{
+			$res[] = "[$key]";
+			foreach($val as $skey => $sval) {
+				//$res[] = "$skey=".(is_numeric($sval) ? $sval : '"'.$sval.'"');
+				$res[] = "$key=".$val;
+			}
+		}  
+		else{ 
+			//$res[] = "$key=".(is_numeric($val) ? $val : '"'.$val.'"');
+			$res[] = "$key=".$val;
+		}
+	}
+	safefilerewrite($file, implode("\r\n", $res));
+}
+function safefilerewrite($fileName, $dataToSave)
+{
+	if ($fp = fopen($fileName, 'w'))
+	{
+		$startTime = microtime(TRUE);
+		do
+        {            
+			$canWrite = flock($fp, LOCK_EX);
+			if(!$canWrite) 
+				usleep(round(rand(0, 100)*1000));
+		} while ((!$canWrite)and((microtime(TRUE)-$startTime) < 5));
+		if ($canWrite)
+		{
+			fwrite($fp, $dataToSave);
+			flock($fp, LOCK_UN);
+		}
+		fclose($fp);
+	}
 }
 ?>
