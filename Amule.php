@@ -122,7 +122,7 @@ function Check_Group_User(){
 		$group = file_get_contents($group_file,true);
 		if(is_string($group)){
 			if(strpos($group,"aMule") == false){
-				exec("pw groupadd aMule -u".strval($Amule_Group_ID));				
+				exec("pw groupadd aMule -g".strval($Amule_Group_ID));				
 			}
 			else
 				Color_Output($CGreen,"Amule group already exist: now checking for user...\n");
