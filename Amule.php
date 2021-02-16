@@ -170,6 +170,7 @@ function Start_Conf(){
 	exec("/etc/rc.d/amuled onestart");
 	sleep(1);
 	exec("/etc/rc.d/amuled stop");
+	exec("chmod -R 0777 /home/aMule/.aMule");
 	$Size = filesize($ConfFile);
 	if(($Size <> false) and ($Size > 0)){
 		$pass = InputKeyboard("Insert amule password:");
