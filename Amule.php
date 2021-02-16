@@ -40,6 +40,7 @@ function Presentation(){
 		Conf_Amule();
 		Check_Group_User();
 		Start_Conf();
+		Amule_Complete();
 	}
 	else
 		Color_Output($CCyan,"Script termited by user");
@@ -336,5 +337,13 @@ function safefilerewrite($fileName, $dataToSave)
 		}
 		fclose($fp);
 	}
+}
+function Amule_Complete(){
+	global $CCyan;	
+	global $CGreen;
+	exec("/etc/rc.d/amuled start");
+	Color_Output($CCyan,"To start aMule: /etc/rc.d/amuled start");
+	Color_Output($CCyan,"To stop aMule: /etc/rc.d/amuled stop");
+	Color_Output($CCyan,"Amule installation complete: enjoy aMule :)");	
 }
 ?>
