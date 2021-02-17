@@ -14,6 +14,7 @@ If you want to install aMule in a jail, you have to check if php is already inst
 pkg install php74
 ```
 after this code, you can execute the code showed above and install correctly aMule.
+With this script, you can set password for webGUI and change directories for temporary and complete files
 
 ## Notes
 Before installing aMule with this script, **you must read the following informations**
@@ -29,3 +30,5 @@ Before installing aMule with this script, **you must read the following informat
 /home/aMule/.aMule/Incoming     //for complete downloaded files
 /home/aMule/.aMule/Temp         //during downloading, for incomplete files
 ```
+* to access webGUI, with your favorite browser go to address xxx.yyy.zzz.ttt:4711 and insert password you set in script
+
