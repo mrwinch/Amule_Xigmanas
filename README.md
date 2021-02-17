@@ -17,4 +17,15 @@ after this code, you can execute the code showed above and install correctly aMu
 
 ## Notes
 Before installing aMule with this script, **you must read the following informations**
-* it's strongly recommended to backup your system  before executing this script: this script will install same packages and change Xigmanas configuration
+* it's strongly recommended to backup your system  before executing this script: this script will install some packages and change Xigmanas configuration
+* at any moment, you can start or stop amule with following code
+```
+/etc/rc.d/amuled start  //start amule
+/etc/rc.d/amuled stop   //stop amule
+```
+* amule configuration files, will be placed in /home/aMule/.aMule directory: configuration data, are stored in amule.conf. Stop amule before editing this file
+* default directories for incoming and incomplete file
+```
+/home/aMule/.aMule/Incoming     //for complete downloaded files
+/home/aMule/.aMule/Temp         //during downloading, for incomplete files
+```
